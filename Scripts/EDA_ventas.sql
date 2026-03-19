@@ -21,21 +21,66 @@ USE SCHEMA bronze;
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC ## [TABLE] Clientes
+-- MAGIC ### Quality checks
+-- MAGIC - Null or duplicate primary keys.
+-- MAGIC - Unwanted spaces in string fields or null values.
+-- MAGIC - Invalid Dates
+-- MAGIC
+
+-- COMMAND ----------
+
+-- Null or duplicate primary keys.
 SELECT 
-  id_cliente,
+  id_cliente
+FROM bronze.clientes
+GROUP BY id_cliente
+HAVING COUNT(*) > 1 OR id_cliente IS NULL;
+
+-- Unwanted spaces in string fields or null values.
+SELECT 
   nombre,
   apellido,
   sexo,
   fecha_nacimiento
 FROM bronze.clientes
+WHERE (nombre != TRIM(nombre) OR nombre IS NULL)
+   OR (apellido != TRIM(apellido) OR apellido IS NULL)
+   OR (sexo != TRIM(sexo) OR sexo IS NULL)
+   OR (fecha_nacimiento IS NULL);
+
+
+-- Invalid Dates
+SELECT 
+  MIN(fecha_nacimiento),
+  MAX(fecha_nacimiento)
+FROM bronze.clientes
+
 
 -- COMMAND ----------
 
-SELECT 
-  *
-FROM bronze.empleados
+-- MAGIC %md
+-- MAGIC ### Transformations
+-- MAGIC - Concat names
+-- MAGIC - Cardidality gender.
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC
+
+-- COMMAND ----------
+
+SELECT 
+  id_cliente,
+  CONCAT(nombre, ' ', apellido) AS nombre_completo,
+  CASE 
+      WHEN sexo = 'null' THEN 'No especificado'
+      ELSE sexo 
+  END AS sexo,  
+  fecha_nacimiento
+FROM bronze.clientes
+
+
+
