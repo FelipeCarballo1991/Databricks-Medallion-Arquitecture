@@ -3,7 +3,7 @@
 -- MAGIC ### El área de Demand Planning requiere información con mayor frecuencia de las transacciones de venta y movimientos de mercadería realizadas. Para ello genera reportes  comerciales  a  través  del  área  de Reporting  con  diversos  KPIs,  indicadores segmentando por distintas categorías
 -- MAGIC
 -- MAGIC ##### Diagrama entidad-relación:
--- MAGIC ![Data Architecture](DER-Ventas.jpg)
+-- MAGIC ![Data Architecture](../DER-Ventas.jpg)
 -- MAGIC
 -- MAGIC ###### El modelo cuenta con las siguientes tablas:
 -- MAGIC - Clientes: Listado de los clientes dados de alta en el sistema de ventas.
@@ -84,3 +84,60 @@ FROM bronze.clientes
 
 
 
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## [TABLE] Empleados
+-- MAGIC ### Quality checks
+-- MAGIC - Null or duplicate primary keys.
+-- MAGIC - Unwanted spaces in string fields or null values
+-- MAGIC - Duplicates names
+-- MAGIC
+-- MAGIC
+-- MAGIC
+
+-- COMMAND ----------
+
+-- Null or duplicate primary keys.
+SELECT 
+  id_vendedor
+FROM bronze.empleados
+GROUP BY id_vendedor
+HAVING COUNT(*) > 1 OR id_vendedor IS NULL;
+
+
+-- Duplicate names
+SELECT 
+  nombre,
+  apellido  
+FROM bronze.empleados
+WHERE (nombre != TRIM(nombre) OR nombre IS NULL OR nombre = "null")
+   OR (apellido != TRIM(apellido) OR apellido IS NULL OR apellido = "null");
+   
+-- Unwanted spaces in string fields or null values
+SELECT   
+  CONCAT(nombre, ' ',  CASE WHEN apellido = "null" THEN ""ELSE apellido END) as nombre_completo,
+  COUNT(*)
+FROM bronze.empleados
+GROUP BY nombre_completo
+HAVING COUNT(*) > 1;
+
+
+-- COMMAND ----------
+
+WITH cte_empleado AS (
+  SELECT 
+    id_vendedor,
+    sucursal,  
+    CONCAT(nombre, ' ', CASE WHEN apellido = "null" THEN "" ELSE apellido END) AS nombre_completo,
+    COUNT(*) OVER (PARTITION BY  CONCAT(nombre, ' ', CASE WHEN apellido = "null" THEN "" ELSE apellido END)) AS duplicados   
+  FROM bronze.empleados
+)
+
+SELECT 
+  id_vendedor,
+  sucursal,
+  nombre_completo
+FROM cte_empleado
+WHERE duplicados = 1
