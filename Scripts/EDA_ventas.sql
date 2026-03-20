@@ -141,3 +141,107 @@ SELECT
   nombre_completo
 FROM cte_empleado
 WHERE duplicados = 1
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## [TABLE] Locales
+-- MAGIC ### Quality checks
+-- MAGIC - Null or duplicate primary keys.
+-- MAGIC - Unwanted spaces in string fields or null values
+-- MAGIC
+-- MAGIC
+-- MAGIC
+-- MAGIC
+
+-- COMMAND ----------
+
+-- Null or duplicate primary keys.
+SELECT 
+  id_sucursal
+FROM bronze.locales
+GROUP BY id_sucursal
+HAVING COUNT(*) > 1 OR id_sucursal IS NULL;
+
+-- Duplicate names
+SELECT 
+  nombre,
+  tipo  
+FROM bronze.locales
+WHERE (nombre != TRIM(nombre) OR nombre IS NULL OR nombre = "null")
+   OR (tipo != TRIM(tipo) OR tipo IS NULL OR tipo = "null");  
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC %md
+-- MAGIC ## [TABLE] productos
+-- MAGIC ### Quality checks
+-- MAGIC - Null or duplicate primary keys.
+-- MAGIC - Unwanted spaces in string fields or null values
+-- MAGIC - Negative price
+-- MAGIC
+-- MAGIC
+-- MAGIC
+
+-- COMMAND ----------
+
+--Null or duplicate primary keys.
+SELECT  
+  id_producto
+FROM bronze.productos
+GROUP BY id_producto
+HAVING COUNT(*) > 1 OR id_producto IS NULL;
+
+--- Unwanted spaces in string fields or null values
+SELECT 
+  *
+FROM bronze.productos
+WHERE (familia != TRIM(familia) OR familia IS NULL OR familia = "null")
+  OR  (nombre != TRIM(nombre) OR nombre IS NULL OR nombre = "null");
+
+--Negative price
+SELECT
+    *
+FROM bronze.productos
+WHERE precio_unitario <= 0
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## [TABLE] Facturas
+-- MAGIC ### Quality checks
+-- MAGIC - Null or duplicate primary keys.
+-- MAGIC - Invalid IDs
+-- MAGIC - Invalid Dates
+-- MAGIC
+
+-- COMMAND ----------
+
+--Null or duplicate primary keys.
+SELECT 
+  num_factura
+FROM bronze.fact_facturas
+GROUP BY num_factura
+HAVING COUNT(*) > 1 OR num_factura IS NULL;
+
+-- Invalid IDs
+SELECT 
+  *
+FROM bronze.fact_facturas
+WHERE (producto IS NULL OR producto <= 0)
+  OR  (num_factura IS NULL OR LOWER(TRIM(num_factura)) = "null")
+  OR  (vendedor IS NULL OR vendedor <= 0)
+  OR  (cantidad IS NULL OR cantidad <= 0)
+  OR  (cliente IS NULL OR cliente <= 0);
+
+-- Invalid Dates
+SELECT 
+  MAX(fecha_venta) AS fecha_maxima,
+  MIN(fecha_venta) AS fecha_minima
+FROM bronze.fact_facturas;
+
+
