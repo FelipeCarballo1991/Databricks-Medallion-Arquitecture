@@ -3,7 +3,7 @@
 -- MAGIC ### El área de Demand Planning requiere información con mayor frecuencia de las transacciones de venta y movimientos de mercadería realizadas. Para ello genera reportes  comerciales  a  través  del  área  de Reporting  con  diversos  KPIs,  indicadores segmentando por distintas categorías
 -- MAGIC
 -- MAGIC ##### Diagrama entidad-relación:
--- MAGIC ![Data Architecture](../DER-Ventas.jpg)
+-- MAGIC ![Data Architecture](../../DER-Ventas.jpg)
 -- MAGIC
 -- MAGIC ###### El modelo cuenta con las siguientes tablas:
 -- MAGIC - Clientes: Listado de los clientes dados de alta en el sistema de ventas.
